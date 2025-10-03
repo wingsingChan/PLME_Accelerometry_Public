@@ -1,6 +1,6 @@
 # Code and Data for "User- and budget-friendly accelerometers highlight vulnerability to poaching and weather for the Critically Endangered big-headed turtle (*Platysternon megacephalum*)"
 
-This repository contains example data collected from an user- and budget-friendly accelerometer that was installed on the Critically Enangered big-headed turtle (*Platysternon megacephalum*). The accelerometer was developed by our team and the code and resources for building it are open-source and are available at [Hackster.io](https://www.hackster.io/brian-k2/accelerometer-and-data-logger-for-small-animal-research-c877c6). 
+This repository contains example data collected from an user- and budget-friendly accelerometer that was installed on the Critically Enangered big-headed turtle (*Platysternon megacephalum*). The accelerometer was developed by our team and the code and resources for building it are open-source and are available in [`code/`](./code). You may also read the original story detailing the development of the accelerometer on [Hackster.io](https://www.hackster.io/brian-k2/accelerometer-and-data-logger-for-small-animal-research-c877c6). 
 
 In addition to the original accelerometry datasets, all codes generated for the analysis of the collected datasets are included in this repository. 
 
