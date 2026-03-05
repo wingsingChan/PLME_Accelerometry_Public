@@ -101,7 +101,7 @@ str(state.per.day)
 
 #### Fitting Model
 gam.hour <- gam(prop ~ sex + as.vector(wt) +  
-                       s(hour, bs = "cc", by = factor(sex), k = -1) + 
+                       s(hour, bs = "cc", by = factor(sex), k = 5) + 
                        s(turtle.ID, bs = "re", k = -1) + 
                        s(acce.roundNo, bs = "re", k = -1) +     
                        s(turtle.ID, acce.roundNo, bs = "re", k = -1),  
@@ -109,21 +109,28 @@ gam.hour <- gam(prop ~ sex + as.vector(wt) +
                 method = "REML", family = tw(link="logit"), 
                 knots = list(hour = c(-0.5, 23.5)))
 summary(gam.hour)
+gam.vcomp(gam.hour)
+
+gam.hour1 <- update(gam.hour, . ~ . - s(turtle.ID, acce.roundNo, bs = "re", k = -1))
+summary(gam.hour1)
+gam.vcomp(gam.hour1)
+
+AIC(gam.hour, gam.hour1)
 
 #### Model evaluation
-gam.check(gam.hour)
+gam.check(gam.hour1)
 
-gam.hour.simRes <- simulateResiduals(gam.hour)
-plot(gam.hour.simRes)
+gam.hour1.simRes <- simulateResiduals(gam.hour1)
+plot(gam.hour1.simRes)
 
-acf(resid(gam.hour))
+acf(resid(gam.hour1))
 
 par(mfrow = c(2,2))
-plot(gam.hour, se = TRUE)
+plot(gam.hour1, se = TRUE)
 
 #### Plotting -- Partial Effect of Hours
 #### Fig 4
-smooth_estimates(gam.hour) %>%
+smooth_estimates(gam.hour1) %>%
   add_confint() %>% 
   filter(.type == "Cyclic CRS") %>% 
   ggplot(aes(y = (.estimate), x = hour)) + 
@@ -157,16 +164,30 @@ gam.day <- gam(prop ~ sex + as.vector(wt) +
                method = "REML", family = tw(link = "logit"))
 summary(gam.day)
 
+gam.day1 <- update(gam.day, . ~ . - s(turtle.ID, acce.roundNo, bs = "re", k = -1))
+summary(gam.day1)
+
+AIC(gam.day, gam.day1)
+
 #### Model evaluation
-gam.check(gam.day)
+gam.check(gam.day1)
 
-gam.day.simRes <- simulateResiduals(gam.day)
-plot(gam.day.simRes)
+gam.day1.simRes <- simulateResiduals(gam.day1)
+plot(gam.day1.simRes)
 
-acf(resid(gam.day))
+acf(resid(gam.day1))
 
 par(mfrow = c(2,2))
-plot(gam.day, se = TRUE)
+plot(gam.day1, se = TRUE)
+
+or_gam(data = filter(state.per.day, state == "2"), 
+       model = gam.day1, 
+       pred = "airTemp", 
+       values = c(20, 21))
+or_gam(data = filter(state.per.day, state == "2"), 
+       model = gam.day1, 
+       pred = "rainfall", 
+       values = c(10, 11))
 
 #### Prediction ---- 
 #### Create new dataset for prediction 
@@ -183,12 +204,11 @@ gam.day.rainfall <- with(gam.day.newData,
                                      wt = 0))
 
 #### Make prediction
-gam.day.airTempPred <- predict(gam.day, gam.day.airTemp, 
+gam.day.airTempPred <- predict(gam.day1, gam.day.airTemp, 
                                exclude = c('s(julian):factor(sex)F',
                                            's(julian):factor(sex)M',
                                            's(turtle.ID)', 
-                                           's(acce.roundNo)', 
-                                           's(turtle.ID,acce.roundNo)'), 
+                                           's(acce.roundNo)'), 
                                newdata.guaranteed = TRUE, 
                                se = TRUE)
 gam.day.airTemp <- cbind(gam.day.airTemp, gam.day.airTempPred)
@@ -200,12 +220,11 @@ gam.day.airTemp$fit <- inv.logit(gam.day.airTemp$fit)
 gam.day.airTemp$upper_ci <- inv.logit(gam.day.airTemp$upper_ci)
 gam.day.airTemp$lower_ci <- inv.logit(gam.day.airTemp$lower_ci)
 
-gam.day.rainfallPred <- predict(gam.day, gam.day.rainfall, 
+gam.day.rainfallPred <- predict(gam.day1, gam.day.rainfall, 
                                 exclude = c('s(julian):factor(sex)F',
                                             's(julian):factor(sex)M',
                                             's(turtle.ID)', 
-                                            's(acce.roundNo)', 
-                                            's(turtle.ID,acce.roundNo)'), 
+                                            's(acce.roundNo)'), 
                                 newdata.guaranteed = TRUE, 
                                 se = TRUE)
 gam.day.rainfall <- cbind(gam.day.rainfall, gam.day.rainfallPred)
@@ -218,7 +237,7 @@ gam.day.rainfall$upper_ci <- inv.logit(gam.day.rainfall$upper_ci)
 gam.day.rainfall$lower_ci <- inv.logit(gam.day.rainfall$lower_ci)
 
 #### Plotting ----
-#### Fig S3
+#### Fig S4
 gam.day.airTemp %>% 
   filter(sex == "F") %>% 
   ggplot(aes(x = airTemp * attr(gam.day.newData$airTemp, 'scaled:scale') + attr(gam.day.newData$airTemp, 'scaled:center'), 
@@ -236,7 +255,7 @@ gam.day.airTemp %>%
   theme(text = element_text(size = 12), 
         axis.text = element_text(size = 12))
 
-#### Fig S4
+#### Fig S5
 gam.day.rainfall %>% 
   filter(sex == "F") %>% 
   ggplot(aes(x = rainfall * attr(gam.day.newData$rainfall, 'scaled:scale') + attr(gam.day.newData$rainfall, 'scaled:center'), 
