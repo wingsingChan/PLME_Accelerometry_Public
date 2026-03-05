@@ -70,6 +70,44 @@ md.Data_iid %>%
             sd = sd(day), 
             max = max(day))
 
+#### Get per-individual metadata
+#### Deployment Duration
+meta.dur <- md.Data_iid %>% 
+  bind_rows() %>% 
+  group_by(turtle.ID, ID_old) %>% 
+  summarise(min = min(time), 
+            max = max(time), 
+            dur = max - min) %>% 
+  group_by(turtle.ID) %>% 
+  summarise(dur = sum(dur))
+
+#### Mean ODBA
+meta.mean <- md.Data_iid %>% 
+  bind_rows() %>% 
+  group_by(turtle.ID) %>% 
+  summarise(meanODBA = mean(ODBA)) 
+
+#### Heavy Rain Events and Duration
+meta.rain <- md.Data_iid %>% 
+  bind_rows() %>% 
+  ungroup() %>% 
+  select(turtle.ID, time, date, hour, rainfall, roll_sum_24h, heavyRain) %>% 
+  mutate(time = paste(date, hour)) %>%
+  transform(time = paste0(time, ":00:00")) %>%
+  transform(time = as.POSIXct(time, format = "%Y-%m-%d %H:%M:%OS")) %>%
+  filter(heavyRain == "yes") 
+meta.rain <- split(meta.rain, factor(meta.rain$turtle.ID))
+meta.rain <- lapply(meta.rain, function(x){
+  x <- x[!duplicated(x$time),]
+  x <- x %>% 
+    mutate(time_diff = time - lag(time)) %>% 
+    mutate(group = cumsum(c(1, time_diff[-1] > 1))) %>% 
+    group_by(turtle.ID) %>% 
+    summarise(heavyRainEvents = length(unique(group)),
+              heavyRainHrs = n())
+})
+meta.rain <- meta.rain %>% bind_rows()
+
 md.Data_iid <- lapply(md.Data_iid, function(x){
   
   if(nrow(x) > 0){
