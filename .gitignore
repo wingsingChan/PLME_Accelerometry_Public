@@ -66,3 +66,6 @@ rsconnect/
 *README.html
 *README_cache/
 #*README_files/
+
+# Supplementary Codes
+!script/PLME_AccelerometryAnalysis_Supp_*.R
