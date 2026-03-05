@@ -321,7 +321,7 @@ accelTS1sec <- lapply(accelTS_iid, computeRawAccel, dur = seconds(1), per = "sec
 
 ## Static Body Acceleration ----
 staticAccelTS1sec <- lapply(accelTS1sec, function(x){
-  rollapply(x, 2, mean, na.rm = TRUE, 
+  rollapply(x, 15, mean, na.rm = TRUE, 
             align = "right", fill = NA) 
 })
 
